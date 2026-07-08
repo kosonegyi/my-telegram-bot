@@ -1,6 +1,6 @@
 import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler
 
 # TOKEN ကို Render ၏ Environment Variables ထဲမှာပဲ ထည့်ထားပါ
 TOKEN = os.environ.get('TOKEN')
