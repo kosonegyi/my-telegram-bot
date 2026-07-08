@@ -2,8 +2,7 @@ import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
-# Render Environment Variable ထဲက TOKEN ကို အသုံးပြုပါ
-# Render Settings > Environment တွင် TOKEN key ကိုသေချာထည့်ပေးပါ
+# Render Environment Variables မှ TOKEN ကို ရယူပါ
 TOKEN = os.getenv('TOKEN') 
 CHANNEL_ID = '-1003669384087'
 
@@ -25,7 +24,6 @@ def get_matches_text():
         "--------------------------"
     )
 
-# Start Command
 async def start(update, context):
     keyboard = [
         [InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
@@ -34,7 +32,6 @@ async def start(update, context):
     ]
     await update.message.reply_text(get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
-# Channel ထဲကို ပို့မယ့် Broadcast Command
 async def broadcast(update, context):
     keyboard = [
         [InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
@@ -43,7 +40,6 @@ async def broadcast(update, context):
     ]
     await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
-# ခလုတ်နှိပ်လျှင် အလုပ်လုပ်မည့်အပိုင်း
 async def button_click(update, context):
     query = update.callback_query
     await query.answer()
@@ -62,12 +58,11 @@ async def button_click(update, context):
 
 if __name__ == '__main__':
     if not TOKEN:
-        print("Error: TOKEN မတွေ့ရှိပါ။ Render Environment Variables တွင် ထည့်ပေးပါ။")
+        print("Error: TOKEN မတွေ့ရှိပါ။")
     else:
         app = ApplicationBuilder().token(TOKEN).build()
         app.add_handler(CommandHandler("start", start))
         app.add_handler(CommandHandler("broadcast", broadcast))
         app.add_handler(CallbackQueryHandler(button_click))
-        
         print("Bot စတင်နေပါပြီ...")
         app.run_polling()
