@@ -16,7 +16,6 @@ def get_matches_text():
     return " လက်ရှိပွဲစဉ်များ မရှိသေးပါ။"
 
 def get_main_text():
-    # ဒီနေရာမှာ Emoji လေးတွေကို ပြန်ထည့်ပေးထားပါတယ်
     return (
         " <b>ပွဲကောင်းများ စတင်တော့မည်!</b>\n\n"
         " <b>မင်္ဂလာပါ!</b> Area 69 (1xbet) မှ ကြိုဆိုပါတယ်။\n"
@@ -29,19 +28,22 @@ async def start(update, context):
         [InlineKeyboardButton(" ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
+    # start command နှိပ်လျှင် ပေါ်မည့် message
     await update.message.reply_text(get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
 async def broadcast(update, context):
+    # Channel ထဲသို့ ပို့မည့် keyboard ပုံစံ
     keyboard = [
         [InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
         [InlineKeyboardButton(" ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
     try:
+        # Channel ထဲသို့ ပို့ခြင်း
         await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
         await update.message.reply_text(" Channel ထဲသို့ အောင်မြင်စွာ ပို့ပြီးပါပြီ။")
     except Exception as e:
-        await update.message.reply_text(f" အမှားဖြစ်နေပါသည်။ Bot ကို Channel Admin ပေးထားပါသလား စစ်ဆေးပါ။\nError: {e}")
+        await update.message.reply_text(f" အမှားဖြစ်နေပါသည်: {e}\n(Bot ကို Channel Admin ပေးထားကြောင်း စစ်ဆေးပါ)")
 
 async def button_click(update, context):
     query = update.callback_query
