@@ -2,6 +2,7 @@ import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
+# Render Environment Variables ထဲတွင် TOKEN ရှိရပါမည်
 TOKEN = os.getenv('TOKEN') 
 ADMIN_ID = 7303908979
 CHANNEL_ID = "-1003669384087" 
@@ -15,6 +16,7 @@ def get_matches_text():
     return " လက်ရှိပွဲစဉ်များ မရှိသေးပါ။"
 
 def get_main_text():
+    # ဒီနေရာမှာ Emoji လေးတွေကို ပြန်ထည့်ပေးထားပါတယ်
     return (
         " <b>ပွဲကောင်းများ စတင်တော့မည်!</b>\n\n"
         " <b>မင်္ဂလာပါ!</b> Area 69 (1xbet) မှ ကြိုဆိုပါတယ်။\n"
@@ -65,7 +67,7 @@ async def button_click(update, context):
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("broadcast", broadcast)) # ဒီလိုင်းကို ပြန်ထည့်ထားပါတယ်
+    app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_click))
     print("Bot စတင်နေပါပြီ...")
     app.run_polling()
