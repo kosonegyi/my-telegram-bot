@@ -2,7 +2,7 @@ import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
-# Token ကို Render ၏ Environment Variables တွင် ထည့်ရပါမည်
+# TOKEN ကို Render ၏ Environment Variables ထဲမှာပဲ ထည့်ထားပါ
 TOKEN = os.environ.get('TOKEN')
 CHANNEL_ID = '-1003669384087'
 
@@ -19,11 +19,10 @@ async def start(update, context):
         [InlineKeyboardButton(" ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    # ဒီနေရာမှာ reply_markup ကို ထည့်ရမှာပါ
     await update.message.reply_text(get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
-# ကျန်တဲ့ function တွေအောက်မှာ ထပ်ရေးပေးပါ
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    print("Bot စတင်နေပါပြီ...")
     app.run_polling()
