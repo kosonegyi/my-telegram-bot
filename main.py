@@ -7,8 +7,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     photo_url = "https://i.ibb.co/LDSGTCKD/1000032426.png" 
     
     keyboard = [
-        [InlineKeyboardButton(" ငွေသွင်း / ငွေထုတ်", url='https://t.me/kothu7877')],
-        [InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')]
+        [InlineKeyboardButton("💰 ငွေသွင်း / ငွေထုတ်", url='https://t.me/kothu7877')],
+        [InlineKeyboardButton("⚽ ဒီနေ့ပွဲစဉ်များ", callback_data='matches')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -16,7 +16,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_photo(
         chat_id=update.effective_chat.id, 
         photo=photo_url, 
-        caption=" Area 69 မှ ကြိုဆိုပါတယ်! \nအောက်ပါ ခလုတ်များကို နှိပ်၍ ဝန်ဆောင်မှုရယူနိုင်ပါသည်။",
+        caption="✨ Area 69 မှ ကြိုဆိုပါတယ်! \nအောက်ပါ ခလုတ်များကို နှိပ်၍ ဝန်ဆောင်မှုရယူနိုင်ပါသည်။",
         reply_markup=reply_markup
     )
 
@@ -26,7 +26,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     if query.data == 'matches':
-        await query.edit_message_caption(caption=" ဒီနေ့ပွဲစဉ်များ:\n1. Man Utd vs Liverpool\n2. Real Madrid vs Barca")
+        await query.edit_message_caption(caption="⚽ ဒီနေ့ပွဲစဉ်များ:\n1. Man Utd vs Liverpool\n2. Real Madrid vs Barca")
 
 if __name__ == '__main__':
     # သင့် Bot Token အစစ်ကို ဒီနေရာမှာ ထည့်ပါ
