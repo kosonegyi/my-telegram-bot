@@ -3,13 +3,14 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
 # Render Environment Variable ထဲက TOKEN ကို အသုံးပြုပါ
+# Render Settings > Environment တွင် TOKEN key ကိုသေချာထည့်ပေးပါ
 TOKEN = os.getenv('TOKEN') 
 CHANNEL_ID = '-1003669384087'
 
 def get_main_text():
     return (
-        "<b> ပွဲကောင်းများ စတင်တော့မည်!</b>\n\n"
-        "<b> မင်္ဂလာပါ!</b> Area 69 (1xbet) မှ ကြိုဆိုပါတယ်။\n"
+        " <b>ပွဲကောင်းများ စတင်တော့မည်!</b>\n\n"
+        " <b>မင်္ဂလာပါ!</b> Area 69 (1xbet) မှ ကြိုဆိုပါတယ်။\n"
         "အောက်ပါခလုတ်များဖြင့် ရွေးချယ်နိုင်ပါသည်။ "
     )
 
@@ -24,6 +25,7 @@ def get_matches_text():
         "--------------------------"
     )
 
+# Start Command
 async def start(update, context):
     keyboard = [
         [InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
@@ -32,15 +34,16 @@ async def start(update, context):
     ]
     await update.message.reply_text(get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
+# Channel ထဲကို ပို့မယ့် Broadcast Command
 async def broadcast(update, context):
     keyboard = [
         [InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
         [InlineKeyboardButton(" ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    # Channel ထဲသို့ ပို့ခြင်း
     await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
+# ခလုတ်နှိပ်လျှင် အလုပ်လုပ်မည့်အပိုင်း
 async def button_click(update, context):
     query = update.callback_query
     await query.answer()
@@ -50,13 +53,21 @@ async def button_click(update, context):
     elif query.data == 'deposit':
         await query.message.edit_text(" <b>ငွေသွင်း/ငွေထုတ်ရန်အတွက်</b> Admin <a href='https://t.me/kothu7877'>@kothu7877</a> ကို ဆက်သွယ်ပေးပါ။", parse_mode='HTML', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(" နောက်သို့", callback_data='start')]]))
     elif query.data == 'start':
-        await query.message.edit_text(get_main_text(), parse_mode='HTML', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')], [InlineKeyboardButton(" ငွေသွင်း/ငွေထုတ်", callback_data='deposit')], [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]]))
+        keyboard = [
+            [InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
+            [InlineKeyboardButton(" ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
+            [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
+        ]
+        await query.message.edit_text(get_main_text(), parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard))
 
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("broadcast", broadcast))
-    app.add_handler(CallbackQueryHandler(button_click))
-    
-    print("Bot စတင်နေပါပြီ...")
-    app.run_polling()
+    if not TOKEN:
+        print("Error: TOKEN မတွေ့ရှိပါ။ Render Environment Variables တွင် ထည့်ပေးပါ။")
+    else:
+        app = ApplicationBuilder().token(TOKEN).build()
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("broadcast", broadcast))
+        app.add_handler(CallbackQueryHandler(button_click))
+        
+        print("Bot စတင်နေပါပြီ...")
+        app.run_polling()
