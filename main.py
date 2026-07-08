@@ -1,49 +1,83 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+import os
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
-# Start Command အတွက် Function
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # ၁။ အရင်ဆုံး စာသားကို ပို့ပေးမယ်
-    text_message = (
-        "🔥 ပွဲကောင်းများ စတင်တော့မည်!\n\n"
-        "✨ Area 69 မှ ကြိုဆိုပါတယ်! \n"
-        "အောက်ပါ ခလုတ်များကို နှိပ်၍ ဝန်ဆောင်မှုရယူနိုင်ပါသည်။"
-    )
+# Render Environment Variables ထဲတွင် TOKEN ရှိရပါမည်
+TOKEN = os.getenv('TOKEN') 
+# သင့် ID ကို တိုက်ရိုက်ထည့်သွင်းပေးထားပါသည်
+ADMIN_ID = 7303908979
+MATCHES_FILE = "matches.txt"
+
+# ပွဲစဉ်စာသားကို ဖိုင်ထဲကနေ ဖတ်ခြင်း
+def get_matches_text():
+    if os.path.exists(MATCHES_FILE):
+        with open(MATCHES_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+            return content if content else "⚽️ လက်ရှိပွဲစဉ်များ မရှိသေးပါ။"
+    return "⚽️ လက်ရှိပွဲစဉ်များ မရှိသေးပါ။"
+
+# Admin က ပွဲစဉ်ပြင်ခြင်း
+async def update_matches(update, context):
+    # သင့် ID ဖြစ်မှသာ ပွဲစဉ် ပြင်လို့ရအောင် လုပ်ထားပါသည်
+    if update.message.from_user.id != ADMIN_ID:
+        await update.message.reply_text("❌ သင်သည် Admin မဟုတ်ပါ။")
+        return
+
+    new_text = " ".join(context.args)
+    if not new_text:
+        await update.message.reply_text("စာသားထည့်ရန်လိုအပ်ပါသည်။ ဥပမာ - /update_matches ⚽️ မန်ယူ vs လီဗာပူး")
+        return
     
+    with open(MATCHES_FILE, "w", encoding="utf-8") as f:
+        f.write(new_text)
+    await update.message.reply_text("✅ ပွဲစဉ်များ အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။")
+
+# မူလ Function များ
+def get_main_text():
+    return (
+        "🔥 <b>ပွဲကောင်းများ စတင်တော့မည်!</b>\n\n"
+        "✨ <b>မင်္ဂလာပါ!</b> Area 69 (1xbet) မှ ကြိုဆိုပါတယ်။\n"
+        "အောက်ပါခလုတ်များဖြင့် ရွေးချယ်နိုင်ပါသည်။ 👇"
+    )
+
+async def start(update, context):
     keyboard = [
-        [InlineKeyboardButton("💰 ငွေသွင်း / ငွေထုတ်", url='https://t.me/kothu7877')],
-        [InlineKeyboardButton("⚽ ဒီနေ့ပွဲစဉ်များ", callback_data='matches')]
+        [InlineKeyboardButton("⚽ ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
+        [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
+        [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    # စာနဲ့ ခလုတ်ကို အရင်ပို့မယ်
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, 
-        text=text_message, 
-        reply_markup=reply_markup
-    )
-    
-    # ၂။ ပြီးမှ ပုံကို သီးခြားပို့ပေးမယ်
-    photo_url = "https://i.ibb.co/LDSGTCKD/1000032426.png" 
-    await context.bot.send_photo(
-        chat_id=update.effective_chat.id, 
-        photo=photo_url
-    )
+    await update.message.reply_text(get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
-# ပွဲစဉ်များ ပြပေးသည့် Function
-async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def broadcast(update, context):
+    keyboard = [
+        [InlineKeyboardButton("⚽ ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
+        [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
+        [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
+    ]
+    # သင့် ID သို့ တိုက်ရိုက်ပို့ပေးပါမည်
+    await context.bot.send_message(chat_id=ADMIN_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+
+async def button_click(update, context):
     query = update.callback_query
     await query.answer()
     
     if query.data == 'matches':
-        await query.edit_message_caption(caption="⚽ ဒီနေ့ပွဲစဉ်များ:\n1. Man Utd vs Liverpool\n2. Real Madrid vs Barca")
+        await query.message.edit_text(get_matches_text(), parse_mode='HTML', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 နောက်သို့", callback_data='start')]]))
+    elif query.data == 'deposit':
+        await query.message.edit_text("💸 <b>ငွေသွင်း/ငွေထုတ်ရန်အတွက်</b> Admin <a href='https://t.me/kothu7877'>@kothu7877</a> ကို ဆက်သွယ်ပေးပါ။", parse_mode='HTML', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 နောက်သို့", callback_data='start')]]))
+    elif query.data == 'start':
+        keyboard = [
+            [InlineKeyboardButton("⚽ ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
+            [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
+            [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
+        ]
+        await query.message.edit_text(get_main_text(), parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard))
 
 if __name__ == '__main__':
-    # သင့် Token ကို ဒီနေရာမှာ ထည့်ပါ
-    app = ApplicationBuilder().token("8897020821:AAFYPCopRI84EzIK5GstAM99Edo5Pz0Sq18").build()
-    
+    app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(CommandHandler("update_matches", update_matches))
     app.add_handler(CallbackQueryHandler(button_click))
-    
-    print("Bot is running...")
+    print("Bot စတင်နေပါပြီ...")
     app.run_polling()
