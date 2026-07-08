@@ -2,7 +2,6 @@ import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
-# Render Environment Variables ထဲတွင် TOKEN ရှိရပါမည်
 TOKEN = os.getenv('TOKEN') 
 ADMIN_ID = 7303908979
 CHANNEL_ID = "-1003669384087" 
@@ -30,6 +29,18 @@ async def start(update, context):
     ]
     await update.message.reply_text(get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
+async def broadcast(update, context):
+    keyboard = [
+        [InlineKeyboardButton("⚽ ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
+        [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
+        [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
+    ]
+    try:
+        await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await update.message.reply_text("✅ Channel ထဲသို့ အောင်မြင်စွာ ပို့ပြီးပါပြီ။")
+    except Exception as e:
+        await update.message.reply_text(f"❌ အမှားဖြစ်နေပါသည်။ Bot ကို Channel Admin ပေးထားပါသလား စစ်ဆေးပါ။\nError: {e}")
+
 async def button_click(update, context):
     query = update.callback_query
     await query.answer()
@@ -39,7 +50,6 @@ async def button_click(update, context):
         await query.message.edit_text(get_matches_text(), parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard))
     
     elif query.data == 'deposit':
-        # ခလုတ်ကိုသာ အသုံးပြုထားပြီး စာသားထဲတွင် username မထည့်ထားပါ
         keyboard = [[InlineKeyboardButton("💬 Admin ထံ စာပို့ရန်", url='https://t.me/kothu7877')],
                     [InlineKeyboardButton("🔙 နောက်သို့", callback_data='start')]]
         await query.message.edit_text("💸 <b>ငွေသွင်း/ငွေထုတ်ရန်အတွက်</b> အောက်ပါခလုတ်ကို နှိပ်ပြီး Admin ထံ ဆက်သွယ်ပါ။", parse_mode='HTML', reply_markup=InlineKeyboardMarkup(keyboard))
@@ -55,6 +65,7 @@ async def button_click(update, context):
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("broadcast", broadcast)) # ဒီလိုင်းကို ပြန်ထည့်ထားပါတယ်
     app.add_handler(CallbackQueryHandler(button_click))
     print("Bot စတင်နေပါပြီ...")
     app.run_polling()
