@@ -3,13 +3,11 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
 # Render Environment Variables ထဲတွင် TOKEN ရှိရပါမည်
-# သို့မဟုတ် အောက်တွင် တိုက်ရိုက်ထည့်နိုင်ပါသည်
-TOKEN = "8897020821:AAFYPCopRI84EzIK5GstAM99Edo5Pz0Sq18"
+TOKEN = os.getenv('TOKEN') 
 ADMIN_ID = 7303908979
-CHANNEL_ID = "-1003669384087" # သင်ပေးထားသော Channel ID
+CHANNEL_ID = "-1003669384087" 
 MATCHES_FILE = "matches.txt"
 
-# ပွဲစဉ်စာသားကို ဖိုင်ထဲကနေ ဖတ်ခြင်း
 def get_matches_text():
     if os.path.exists(MATCHES_FILE):
         with open(MATCHES_FILE, "r", encoding="utf-8") as f:
@@ -17,22 +15,18 @@ def get_matches_text():
             return content if content else "⚽️ လက်ရှိပွဲစဉ်များ မရှိသေးပါ။"
     return "⚽️ လက်ရှိပွဲစဉ်များ မရှိသေးပါ။"
 
-# Admin က ပွဲစဉ်ပြင်ခြင်း
 async def update_matches(update, context):
     if update.message.from_user.id != ADMIN_ID:
         await update.message.reply_text("❌ သင်သည် Admin မဟုတ်ပါ။")
         return
-
     new_text = " ".join(context.args)
     if not new_text:
         await update.message.reply_text("စာသားထည့်ရန်လိုအပ်ပါသည်။ ဥပမာ - /update_matches ⚽️ မန်ယူ vs လီဗာပူး")
         return
-    
     with open(MATCHES_FILE, "w", encoding="utf-8") as f:
         f.write(new_text)
     await update.message.reply_text("✅ ပွဲစဉ်များ အောင်မြင်စွာ ပြင်ဆင်ပြီးပါပြီ။")
 
-# မူလ Function များ
 def get_main_text():
     return (
         "🔥 <b>ပွဲကောင်းများ စတင်တော့မည်!</b>\n\n"
@@ -46,10 +40,8 @@ async def start(update, context):
         [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    # စာသားပို့ခြင်း
+    # စာသားနှင့် ခလုတ်သာ ပို့ခြင်း
     await update.message.reply_text(get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
-    # ပုံပို့ခြင်း
-    await context.bot.send_photo(chat_id=update.effective_chat.id, photo="https://i.ibb.co/LDSGTCKD/1000032426.png")
 
 async def broadcast(update, context):
     keyboard = [
@@ -57,16 +49,13 @@ async def broadcast(update, context):
         [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    
-    # Channel ထဲသို့ ပို့ပေးခြင်း
+    # Channel ထဲသို့ စာသားနှင့် ခလုတ်သာ ပို့ခြင်း
     await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
-    await context.bot.send_photo(chat_id=CHANNEL_ID, photo="https://i.ibb.co/LDSGTCKD/1000032426.png")
-    await update.message.reply_text("✅ Channel ထဲသို့ Broadcast ပို့ပြီးပါပြီ။")
+    await update.message.reply_text("✅ Channel ထဲသို့ အောင်မြင်စွာ ပို့ပြီးပါပြီ။")
 
 async def button_click(update, context):
     query = update.callback_query
     await query.answer()
-    
     if query.data == 'matches':
         await query.message.edit_text(get_matches_text(), parse_mode='HTML', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 နောက်သို့", callback_data='start')]]))
     elif query.data == 'deposit':
