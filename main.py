@@ -3,7 +3,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 
 # ပုံ Link ကို သုံးပြီး စတင်တဲ့ Function
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # သင်ရထားတဲ့ Direct Link အမှန်ကို ဒီမှာထည့်ပါ
+    # သင်ရထားတဲ့ Direct Link
     photo_url = "https://i.ibb.co/LDSGTCKD/1000032426.png" 
     
     keyboard = [
@@ -29,8 +29,8 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_caption(caption="⚽ ဒီနေ့ပွဲစဉ်များ:\n1. Man Utd vs Liverpool\n2. Real Madrid vs Barca")
 
 if __name__ == '__main__':
-    # သင့် Bot Token အစစ်ကို ဒီနေရာမှာ ထည့်ပါ
-    app = ApplicationBuilder().token("YOUR_BOT_TOKEN_HERE").build()
+    # သင်ပေးလိုက်တဲ့ Token ကို ဒီနေရာမှာ ထည့်ပေးလိုက်ပါပြီ
+    app = ApplicationBuilder().token("8897020821:AAFYPCopRI84EzIK5GstAM99Edo5Pz0Sq18").build()
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_click))
