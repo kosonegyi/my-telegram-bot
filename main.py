@@ -1,3 +1,7 @@
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+
+# Start Command အတွက် Function
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ၁။ အရင်ဆုံး စာသားကို ပို့ပေးမယ်
     text_message = (
@@ -25,3 +29,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id, 
         photo=photo_url
     )
+
+# ပွဲစဉ်များ ပြပေးသည့် Function
+async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    if query.data == 'matches':
+        await query.edit_message_caption(caption="⚽ ဒီနေ့ပွဲစဉ်များ:\n1. Man Utd vs Liverpool\n2. Real Madrid vs Barca")
+
+if __name__ == '__main__':
+    # သင့် Token ကို ဒီနေရာမှာ ထည့်ပါ
+    app = ApplicationBuilder().token("8897020821:AAFYPCopRI84EzIK5GstAM99Edo5Pz0Sq18").build()
+    
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(button_click))
+    
+    print("Bot is running...")
+    app.run_polling()
