@@ -7,9 +7,16 @@ TOKEN = os.environ.get('import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
-# Token ကို Render ၏ Environment Variables တွင် ထည့်ရပါမည်
-TOKEN = os.environ.get('8897020821:AAFYPCopRI84EzIK5GstAM99Edo5Pz0Sq18')
+import os
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
+
+# TOKEN ကို Render Environment Variables ထဲမှာပဲ ထည့်ထားပါ၊ Code ထဲမှာ မထည့်ပါနဲ့
+TOKEN = os.environ.get('TOKEN')
 CHANNEL_ID = '-1003669384087'
+
+# ကျန်တဲ့ Code အပိုင်းတွေကို ဆက်လက်ထားရှိပါ
+
 
 def get_main_text():
     return (
