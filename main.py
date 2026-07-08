@@ -40,7 +40,7 @@ async def start(update, context):
         [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    # စာသားနှင့် ခလုတ်သာ ပို့ခြင်း
+    # စာသားနှင့် ခလုတ်သာ ပို့ခြင်း (ပုံဖျက်ထားသည်)
     await update.message.reply_text(get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
 async def broadcast(update, context):
@@ -49,7 +49,7 @@ async def broadcast(update, context):
         [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    # Channel ထဲသို့ စာသားနှင့် ခလုတ်သာ ပို့ခြင်း
+    # Channel ထဲသို့ စာသားနှင့် ခလုတ်သာ ပို့ခြင်း (ပုံဖျက်ထားသည်)
     await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
     await update.message.reply_text("✅ Channel ထဲသို့ အောင်မြင်စွာ ပို့ပြီးပါပြီ။")
 
