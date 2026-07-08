@@ -135,8 +135,8 @@ def get_keyboard():
     return [
         [InlineKeyboardButton(" ဒီနေ့ပွဲစဉ်များ", callback_data='matches')],
         [InlineKeyboardButton(" ရလဒ်ခန့်မှန်းပြီး မဲနှိုက်ရန်", callback_data='predict_menu')],
-        [InlineKeyboardButton(" Ngwe Thwin/Ngwe Htok", url='https://t.me')],
-        [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me')]
+        [InlineKeyboardButton(" ငွေသွင်း/ ငွေထုတ်", url='https://t.me/kothu7877')],
+        [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
 
 async def start(update, context):
