@@ -5,7 +5,6 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 # Render Environment Variables ထဲတွင် TOKEN ရှိရပါမည်
 TOKEN = os.getenv('TOKEN') 
 ADMIN_ID = 7303908979
-# သင့် Channel ID ကို ဒီနေရာမှာ သေချာစစ်ဆေးပါ
 CHANNEL_ID = "-1003669384087" 
 MATCHES_FILE = "matches.txt"
 
