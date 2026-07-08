@@ -2,8 +2,10 @@ import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler
 
+# Render Environment Variables ထဲတွင် TOKEN ရှိရပါမည်
 TOKEN = os.getenv('TOKEN') 
 ADMIN_ID = 7303908979
+# သင့် Channel ID ကို ဒီနေရာမှာ သေချာစစ်ဆေးပါ
 CHANNEL_ID = "-1003669384087" 
 MATCHES_FILE = "matches.txt"
 
@@ -47,8 +49,11 @@ async def broadcast(update, context):
         [InlineKeyboardButton(" ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton(" Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
-    await update.message.reply_text(" Channel ထဲသို့ ပို့ပြီးပါပြီ။")
+    try:
+        await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await update.message.reply_text(" Channel ထဲသို့ အောင်မြင်စွာ ပို့ပြီးပါပြီ။")
+    except Exception as e:
+        await update.message.reply_text(f" အမှားတစ်ခုဖြစ်နေပါသည်။ Bot ကို Channel Admin ပေးထားပါသလား စစ်ဆေးပါ။\nError: {e}")
 
 async def button_click(update, context):
     query = update.callback_query
