@@ -4,8 +4,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 
 # Render Environment Variables ထဲတွင် TOKEN ရှိရပါမည်
 TOKEN = os.getenv('TOKEN') 
-# သင့် ID ကို တိုက်ရိုက်ထည့်ပေးထားပါသည်
-CHANNEL_ID = '7303908979' 
+# သင့် ID ကို တိုက်ရိုက်ထည့်သွင်းပေးထားပါသည်
+ADMIN_ID = 7303908979
 MATCHES_FILE = "matches.txt"
 
 # ပွဲစဉ်စာသားကို ဖိုင်ထဲကနေ ဖတ်ခြင်း
@@ -19,7 +19,7 @@ def get_matches_text():
 # Admin က ပွဲစဉ်ပြင်ခြင်း
 async def update_matches(update, context):
     # သင့် ID ဖြစ်မှသာ ပွဲစဉ် ပြင်လို့ရအောင် လုပ်ထားပါသည်
-    if update.message.from_user.id != 7303908979:
+    if update.message.from_user.id != ADMIN_ID:
         await update.message.reply_text("❌ သင်သည် Admin မဟုတ်ပါ။")
         return
 
@@ -54,8 +54,8 @@ async def broadcast(update, context):
         [InlineKeyboardButton("💰 ငွေသွင်း/ငွေထုတ်", callback_data='deposit')],
         [InlineKeyboardButton("🎁 Admin ထံမှ အထူး Bonus ရယူရန်", url='https://t.me/kothu7877')]
     ]
-    # အခုဆိုရင် သင့်ဆီကိုပဲ တိုက်ရိုက်ပို့ပေးပါလိမ့်မယ်
-    await context.bot.send_message(chat_id=CHANNEL_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+    # သင့် ID သို့ တိုက်ရိုက်ပို့ပေးပါမည်
+    await context.bot.send_message(chat_id=ADMIN_ID, text=get_main_text(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
 async def button_click(update, context):
     query = update.callback_query
