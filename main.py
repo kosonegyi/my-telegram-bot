@@ -45,7 +45,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     user_text = update.message.text
-    username_display = f"@{user.username}" if user.username else "@None"
+    
+    # Username ရှိလျှင် @username ပြမည်၊ မရှိလျှင် Admin ဘက်မှ နှိပ်၍ တိုက်ရိုက်ဆက်သွယ်နိုင်ရန် Profile Link ချိတ်ပေးမည်
+    if user.username:
+        username_display = f"@{user.username}"
+    else:
+        username_display = f"[{user.full_name}](tg://user?id={user.id})"
 
     # (၁) Dia စျေးနှုန်းများကြည့်ရန် ခလုတ်နှိပ်လျှင်
     if user_text == "💎 Dia စျေးနှုန်းများကြည့်ရန်":
@@ -78,10 +83,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         buy_keyboard = [["🛍️ ဝယ်ယူမည့် ပမာဏ ရွေးချယ်ရန်"], ["⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်"]]
         reply_markup = ReplyKeyboardMarkup(buy_keyboard, resize_keyboard=True)
-        await update.message.reply_text(price_text, reply_markup=reply_markup)
+        await update.message.reply_text(price_text, reply_markup=reply_markup, parse_mode="Markdown")
         
         try:
-            await context.bot.send_message(chat_id=ADMIN_ID, text=f"💎 Dia စျေးနှုန်းများကြည့်သူ: {user.full_name} ({username_display})")
+            await context.bot.send_message(
+                chat_id=ADMIN_ID, 
+                text=f"💎 Dia စျေးနှုန်းများကြည့်သူ: {user.full_name}\n👤 Username/Profile: {username_display}", 
+                parse_mode="Markdown"
+            )
         except: pass
 
     # (၂) ဝယ်ယူမည် (Products) ခလုတ်နှိပ်လျှင်
@@ -101,97 +110,4 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ["⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်"]
         ]
         reply_markup = ReplyKeyboardMarkup(buy_keyboard, resize_keyboard=True)
-        await update.message.reply_text(text=choice_text, reply_markup=reply_markup, parse_mode="Markdown")
-
-    # (၃) ဝယ်သူမှ Dia ပမာဏ တစ်ခုခုကို နှိပ်လိုက်လျှင်
-    elif "ks)" in user_text:
-        invoice_text = (
-            f"🛒 **လူကြီးမင်း ရွေးချယ်ထားသော ပမာဏ:**\n"
-            f"➔ ✨ **{user_text}**\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "💰 **Payment ဆောင်ရွက်ရန် အချက်အလက်:**\n"
-            "• KBZ Pay သို့မဟုတ် Wave Pay\n"
-            "• 09967120289 (Pyae Sone)\n\n"
-            "📸 **ငွေလွှဲပြီးပါက ပြေစာ Screenshot ပုံကို ဤ Bot ထဲသို့ တိုက်ရိုက် ပုံရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**"
-        )
-        await update.message.reply_text(text=invoice_text, parse_mode="Markdown")
-
-        try:
-            alert_selection = f"🛒 **ဝယ်ယူရန် ပမာဏရွေးချယ်မှု အသစ်**\n━━━━━━━━━━━━━━━━━━━━\n👤 ဝယ်သူ: {user.full_name} ({username_display})\n💎 ရွေးချယ်သွားသည်: {user_text}"
-            await context.bot.send_message(chat_id=ADMIN_ID, text=alert_selection)
-        except: pass
-
-    # (၄) ပင်မစာမျက်နှာသို့ ပြန်ရန် နှိပ်လျှင်
-    elif user_text == "⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်":
-        keyboard = [
-            ["🛍️ ဝယ်ယူမည် (Products)"],
-            ["💎 Dia စျေးနှုန်းများကြည့်ရန်"],
-            ["👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်"]
-        ]
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text("🔙 ပင်မစာမျက်နှာသို့ ပြန်ရောက်ပါပြီ။", reply_markup=reply_markup)
-
-    # (၅) Admin တိုက်ရိုက်ဆက်သွယ်ရန် ခလုတ်နှိပ်လျှင်
-    elif user_text == "👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်":
-        admin_text = (
-            "👨‍💻 **Admin ဆက်သွယ်ရန်**\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "အောက်ပါ သင့်အကောင့် Link ပြာလေးကို နှိပ်ပြီး တိုက်ရိုက် လာရောက် ဆက်သွယ်နိုင်ပါပြီရှင် -\n\n"
-            "👉 ချက်တင်ဘောက်စ်သို့ သွားရန် - @ksonegyi333"
-        )
-        await update.message.reply_text(admin_text)
-
-    # (၆) ဝယ်သူက Game ID သို့မဟုတ် အခြားစာများ လာရိုက်ပို့လျှင်
-    else:
-        try:
-            forward_text = (
-                "🆔 ဝယ်သူထံမှ အချက်အလက်/စာ ရောက်ရှိလာပါသည်\n"
-                "━━━━━━━━━━━━━━━━━━━━\n"
-                f"👤 ဝယ်သူ: {user.full_name} ({username_display})\n"
-                f"💬 ပို့လိုက်သောစာ: {user_text}"
-            )
-            await context.bot.send_message(chat_id=ADMIN_ID, text=forward_text)
-            await update.message.reply_text("🙏 အချက်အလက်များကို မှတ်တမ်းတင်ပြီးပါပြီ။ ခေတ္တစောင့်ဆိုင်းပေးပါရန်။")
-        except: pass
-
-# ဝယ်သူဘက်က ပြေစာပုံ ပို့လာပါက သင့်ထံ လှမ်းပို့မည့် စနစ်
-async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.from_user
-    photo_file = update.message.photo[-1].file_id 
-    caption_text = update.message.caption if update.message.caption else ""
-    username_display = f"@{user.username}" if user.username else "@None"
-
-    buyer_info = (
-        "📩 **ဝယ်သူထံမှ ပြေစာအသစ် ရောက်ရှိလာပါသည်** 📩\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 **အမည်:** {user.full_name}\n"
-        f"🆔 Username: {username_display}\n"
-        f"📝 ရေးလာသောစာ: {caption_text}"
-    )
-    try:
-        await context.bot.send_photo(chat_id=ADMIN_ID, photo=photo_file, caption=buyer_info)
-        
-        reply_message = (
-            "✅ သင့်ရဲ့ ပြေစာပုံကို လက်ခံရရှိပါပြီ။ Admin မှ စစ်ဆေးပြီး ထည့်သွင်းပေးပါမည်။\n\n"
-            "🆔 **လူကြီးမင်း၏ Game ID နှင့် Zone ID ကို ဤနေရာတွင် ရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**\n"
-            "💡 _(ဥပမာ - 12345678 (1234))_"
-        )
-        await update.message.reply_text(reply_message, parse_mode="Markdown")
-    except Exception as e:
-        print(f"Photo Error: {e}")
-
-def main():
-    # Flask keep_alive ကို Background တွင် စတင် run ပေးခြင်း
-    keep_alive()
-
-    application = Application.builder().token("8823110888:AAEZe7k0IAaZUrzF4GNHBJUIah1TpDMqNGM").build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    print("Bot is running successfully with Direct Text Mention and Flask Web Service...")
-    application.run_polling()
-
-if __name__ == "__main__":
-    main()
+        await update.message.
