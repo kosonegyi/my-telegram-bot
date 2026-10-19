@@ -50,7 +50,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # (၁) Dia စျေးနှုန်းများကြည့်ရန် ခလုတ်နှိပ်လျှင်
     if user_text == "💎 Dia စျေးနှုန်းများကြည့်ရန်":
         price_text = (
-            "🔮 Weekly Pass - 9,000 ks\n"
+            "🔮 Weekly Pass - 7,100 ks\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "💎 Dia 86    -  6,000ks\n"
             "💎 Dia 172   -  12,000ks\n"
