@@ -65,7 +65,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             if match:
                 target_user_id = match.group(1)
-                # ဝယ်သူဆီသို့ Admin ရေးလိုက်သော စာသားကိုသာ တိုက်ရိုက်ပို့မည် (ပြင်ပလင့်ခ်/ကြော်ငြာများ လုံးဝမပါစေရန်)[span_1](start_span)[span_1](end_span)
+                # ဝယ်သူဆီသို့ Admin ရေးလိုက်သော စာသားကိုသာ တိုက်ရိုက်ပို့မည် (ပြင်ပလင့်ခ်/ကြော်ငြာများ လုံးဝမပါစေရန်)
                 await context.bot.send_message(
                     chat_id=int(target_user_id),
                     text=f"{user_text}"
@@ -186,67 +186,3 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # (၆) Game ID သို့မဟုတ် အခြားစာများ ပို့လာပါက Validation စစ်ဆေးခြင်း
     else:
         # Game ID ပုံစံ (ဂဏန်းသီးသန့် သို့မဟုတ် Zone ပါဝင်ခြင်း) ဟုတ်မဟုတ် စစ်ဆေးခြင်း
-        is_game_id = re.search(r'\d{5,}', user_text)
-        
-        if is_game_id:
-            status_reply = "⏳ **သင့်အမှာစာကို စစ်ဆေးနေပါပြီ (Processing)...** ခေတ္တစောင့်ဆိုင်းပေးပါ။"
-            await update.message.reply_text(status_reply, parse_mode="Markdown")
-        
-        try:
-            forward_text = (
-                "🆔 **ဝယ်သူထံမှ အချက်အလက်/Game ID ရောက်ရှိလာပါသည်**\n"
-                "━━━━━━━━━━━━━━━━━━━━\n"
-                f"👤 ဝယ်သူ: {user.full_name}\n"
-                f"🔗 Profile: {username_display}\n"
-                f"💬 ပို့လိုက်သောစာ: {user_text}"
-            )
-            await context.bot.send_message(chat_id=ADMIN_ID, text=forward_text, parse_mode="Markdown")
-            if not is_game_id:
-                await update.message.reply_text("🙏 အချက်အလက်များကို မှတ်တမ်းတင်ပြီးပါပြီ။ ခေတ္တစောင့်ဆိုင်းပေးပါရန်။")
-        except: pass
-
-# ဝယ်သူဘက်က ပြေစာပုံ ပို့လာပါက သင့်ထံ လှမ်းပို့မည့် စနစ်
-async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.from_user
-    photo_file = update.message.photo[-1].file_id 
-    caption_text = update.message.caption if update.message.caption else ""
-    
-    if user.username:
-        username_display = f"@{user.username}"
-    else:
-        username_display = f"[{user.full_name}](tg://user?id={user.id})"
-
-    buyer_info = (
-        "📩 **ဝယ်သူထံမှ ပြေစာအသစ် ရောက်ရှိလာပါသည်** 📩\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 **အမည်:** {user.full_name}\n"
-        f"🔗 **Username/Profile:** {username_display}\n"
-        f"📝 **ရေးလာသောစာ:** {caption_text}"
-    )
-    try:
-        await context.bot.send_photo(chat_id=ADMIN_ID, photo=photo_file, caption=buyer_info, parse_mode="Markdown")
-        
-        reply_message = (
-            "✅ သင့်ရဲ့ ပြေစာပုံကို လက်ခံရရှိပါပြီ။ Admin မှ စစ်ဆေးနေပါပြီ (Processing)...\n\n"
-            "🆔 **လူကြီးမင်း၏ Game ID နှင့် Zone ID ကို ဤနေရာတွင် ရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**\n"
-            "💡 _(ဥပမာ - 12345678 (1234))_"
-        )
-        await update.message.reply_text(reply_message, parse_mode="Markdown")
-    except Exception as e:
-        print(f"Photo Error: {e}")
-
-def main():
-    # Flask keep_alive ကို Background တွင် စတင် run ပေးခြင်း
-    keep_alive()
-
-    application = Application.builder().token("8823110888:AAEZe7k0IAaZUrzF4GNHBJUIah1TpDMqNGM").build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    print("Bot is running successfully with Clean Admin Reply System...")
-    application.run_polling()
-
-if __name__ == "__main__":
-    main()
