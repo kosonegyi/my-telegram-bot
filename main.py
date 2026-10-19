@@ -3,6 +3,7 @@ import asyncio
 from threading import Thread
 from flask import Flask
 import logging
+import re
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -23,7 +24,7 @@ def keep_alive():
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # သင့်ရဲ့ Personal Chat ID
-ADMIN_ID = "7303908979" 
+ADMIN_ID = 7303908979 
 
 # /start command ပို့တဲ့အခါ အောက်ခြေခလုတ်များ တိုက်ရိုက်ပြသခြင်း
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -45,7 +46,34 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     user_text = update.message.text
+    chat_id = update.message.chat_id
     
+    # Admin ဘက်မှ ဝယ်သူဆီသို့ Reply ပြန်နေခြင်းဟုတ်မဟုတ် စစ်ဆေးခြင်း
+    if chat_id == ADMIN_ID and update.message.reply_to_message:
+        replied_msg = update.message.reply_to_message.text or update.message.reply_to_message.caption
+        if replied_msg:
+            # ပို့ထားသော စာထဲမှ ဝယ်သူ၏ Telegram ID (tg://user?id=...) ကို ရှာဖွေခြင်း
+            match = re.search(r'tg://user\?id=(\d+)', update.message.reply_to_message.text or "" if hasattr(update.message.reply_to_message, 'text') else str(update.message.reply_to_message.caption))
+            if not match:
+                # Caption သို့မဟုတ် Text ထဲတွင် ID မတွေ့ပါက ဖြည့်စွက်ရှာဖွေရန် (Fallback)
+                match = re.search(r'id=(\d+)', str(update.message.reply_to_message.parse_entity_urls() if hasattr(update.message.reply_to_message, 'parse_entity_urls') else ""))
+            
+            # အလွယ်ဆုံးနည်းဖြင့် မက်ဆေ့ပ်ထဲပါသော ID ကို ရှာရန် Regex ထပ်မံသုံးခြင်း
+            all_ids = re.findall(r'id=(\d+)', str(update.message.reply_to_message.to_dict()))
+            if all_ids:
+                target_user_id = all_ids[0]
+                try:
+                    await context.bot.send_message(
+                        chat_id=int(target_user_id),
+                        text=f"👑 **Admin မှ တုံ့ပြန်ချက်:**\n\n{user_text}",
+                        parse_mode="Markdown"
+                    )
+                    await update.message.reply_text("✅ ဝယ်သူထံသို့ စာပို့ပြီးပါပြီ။")
+                    return
+                except Exception as e:
+                    await update.message.reply_text(f"❌ ပို့၍မရပါ။ Error: {e}")
+                    return
+
     # Username ရှိလျှင် @username ပြမည်၊ မရှိလျှင် Admin ဘက်မှ နှိပ်၍ တိုက်ရိုက်ဆက်သွယ်နိုင်ရန် Profile Link ချိတ်ပေးမည်
     if user.username:
         username_display = f"@{user.username}"
@@ -110,4 +138,110 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ["⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်"]
         ]
         reply_markup = ReplyKeyboardMarkup(buy_keyboard, resize_keyboard=True)
-        await update.message.
+        await update.message.reply_text(text=choice_text, reply_markup=reply_markup, parse_mode="Markdown")
+
+    # (၃) ဝယ်သူမှ Dia ပမာဏ တစ်ခုခုကို နှိပ်လိုက်လျှင်
+    elif "ks)" in user_text:
+        invoice_text = (
+            f"🛒 **လူကြီးမင်း ရွေးချယ်ထားသော ပမာဏ:**\n"
+            f"➔ ✨ **{user_text}**\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "💰 **Payment ဆောင်ရွက်ရန် အချက်အလက်:**\n"
+            "• KBZ Pay သို့မဟုတ် Wave Pay\n"
+            "• 09967120289 (Pyae Sone)\n\n"
+            "📸 **ငွေလွှဲပြီးပါက ပြေစာ Screenshot ပုံကို ဤ Bot ထဲသို့ တိုက်ရိုက် ပုံရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**"
+        )
+        await update.message.reply_text(text=invoice_text, parse_mode="Markdown")
+
+        try:
+            alert_selection = f"🛒 **ဝယ်ယူရန် ပမာဏရွေးချယ်မှု အသစ်**\n━━━━━━━━━━━━━━━━━━━━\n👤 ဝယ်သူ: {user.full_name}\n🔗 Profile: {username_display}\n💎 ရွေးချယ်သွားသည်: {user_text}"
+            await context.bot.send_message(chat_id=ADMIN_ID, text=alert_selection, parse_mode="Markdown")
+        except: pass
+
+    # (၄) ပင်မစာမျက်နှာသို့ ပြန်ရန် နှိပ်လျှင်
+    elif user_text == "⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်":
+        keyboard = [
+            ["🛍️ ဝယ်ယူမည် (Products)"],
+            ["💎 Dia စျေးနှုန်းများကြည့်ရန်"],
+            ["👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်"]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        await update.message.reply_text("🔙 ပင်မစာမျက်နှာသို့ ပြန်ရောက်ပါပြီ။", reply_markup=reply_markup)
+
+    # (၅) Admin တိုက်ရိုက်ဆက်သွယ်ရန် ခလုတ်နှိပ်လျှင်
+    elif user_text == "👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်":
+        admin_text = (
+            "👨‍💻 **Admin ဆက်သွယ်ရန်**\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "အောက်ပါ သင့်အကောင့် Link ပြာလေးကို နှိပ်ပြီး တိုက်ရိုက် လာရောက် ဆက်သွယ်နိုင်ပါပြီရှင် -\n\n"
+            "👉 ချက်တင်ဘောက်စ်သို့ သွားရန် - @ksonegyi333"
+        )
+        await update.message.reply_text(admin_text)
+
+    # (၆) Game ID သို့မဟုတ် အခြားစာများ ပို့လာပါက Validation စစ်ဆေးခြင်း
+    else:
+        # Game ID ပုံစံ (ဂဏန်းသီးသန့် သို့မဟုတ် Zone ပါဝင်ခြင်း) ဟုတ်မဟုတ် စစ်ဆေးခြင်း
+        is_game_id = re.search(r'\d{5,}', user_text)
+        
+        if is_game_id:
+            status_reply = "⏳ **သင့်အမှာစာကို စစ်ဆေးနေပါပြီ (Processing)...** ခေတ္တစောင့်ဆိုင်းပေးပါ။"
+            await update.message.reply_text(status_reply, parse_mode="Markdown")
+        
+        try:
+            forward_text = (
+                "🆔 **ဝယ်သူထံမှ အချက်အလက်/Game ID ရောက်ရှိလာပါသည်**\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                f"👤 ဝယ်သူ: {user.full_name}\n"
+                f"🔗 Profile: {username_display}\n"
+                f"💬 ပို့လိုက်သောစာ: {user_text}"
+            )
+            await context.bot.send_message(chat_id=ADMIN_ID, text=forward_text, parse_mode="Markdown")
+            if not is_game_id:
+                await update.message.reply_text("🙏 အချက်အလက်များကို မှတ်တမ်းတင်ပြီးပါပြီ။ ခေတ္တစောင့်ဆိုင်းပေးပါရန်။")
+        except: pass
+
+# ဝယ်သူဘက်က ပြေစာပုံ ပို့လာပါက သင့်ထံ လှမ်းပို့မည့် စနစ်
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.from_user
+    photo_file = update.message.photo[-1].file_id 
+    caption_text = update.message.caption if update.message.caption else ""
+    
+    if user.username:
+        username_display = f"@{user.username}"
+    else:
+        username_display = f"[{user.full_name}](tg://user?id={user.id})"
+
+    buyer_info = (
+        "📩 **ဝယ်သူထံမှ ပြေစာအသစ် ရောက်ရှိလာပါသည်** 📩\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 **အမည်:** {user.full_name}\n"
+        f"🔗 **Username/Profile:** {username_display}\n"
+        f"📝 **ရေးလာသောစာ:** {caption_text}"
+    )
+    try:
+        await context.bot.send_photo(chat_id=ADMIN_ID, photo=photo_file, caption=buyer_info, parse_mode="Markdown")
+        
+        reply_message = (
+            "✅ သင့်ရဲ့ ပြေစာပုံကို လက်ခံရရှိပါပြီ။ Admin မှ စစ်ဆေးနေပါပြီ (Processing)...\n\n"
+            "🆔 **လူကြီးမင်း၏ Game ID နှင့် Zone ID ကို ဤနေရာတွင် ရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**\n"
+            "💡 _(ဥပမာ - 12345678 (1234))_"
+        )
+        await update.message.reply_text(reply_message, parse_mode="Markdown")
+    except Exception as e:
+        print(f"Photo Error: {e}")
+
+def main():
+    # Flask keep_alive ကို Background တွင် စတင် run ပေးခြင်း
+    keep_alive()
+
+    application = Application.builder().token("8823110888:AAEZe7k0IAaZUrzF4GNHBJUIah1TpDMqNGM").build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    print("Bot is running successfully with Admin Reply & Order Processing System...")
+    application.run_polling()
+
+if __name__ == "__main__":
+    main()
