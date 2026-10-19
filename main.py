@@ -89,8 +89,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         choice_text = "👇 **လူကြီးမင်း ဝယ်ယူလိုသော Dia ပမာဏကို ရွေးချယ်ပေးပါရှင် -**"
         
         buy_keyboard = [
-            ["🔮 Weekly Pass (9,000 ks)"],
-            ["💎 86 Dia (6,000 ks)", "💎 172 Dia (12,000 ks)"],
+            ["🔮 Weekly Pass (7,100 ks)"],
+            ["💎 86 Dia (6,197 ks)", "💎 172 Dia (12,476 ks)"],
             ["💎 257 Dia (18,000 ks)", "💎 344 Dia (24,000 ks)"],
             ["💎 516 Dia (36,000 ks)", "💎 706 Dia (48,000 ks)"],
             ["💎 1346 Dia (90,000 ks)", "💎 1825 Dia (120,000 ks)"],
