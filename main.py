@@ -48,31 +48,36 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     chat_id = update.message.chat_id
     
-    # Admin ဘက်မှ ဝယ်သူဆီသို့ Reply ပြန်နေခြင်းဟုတ်မဟုတ် စစ်ဆေးခြင်း
+    # Admin ဘက်မှ ဝယ်သူဆီသို့ Reply ပြန်နေခြင်းဟုတ်မဟုတ် စစ်ဆေးခြင်း (ပြင်ပကြော်ငြာစာများ လုံးဝမပါစေရန် တိကျစွာ စစ်ဆေးခြင်း)
     if chat_id == ADMIN_ID and update.message.reply_to_message:
-        replied_msg = update.message.reply_to_message.text or update.message.reply_to_message.caption
-        if replied_msg:
-            # ပို့ထားသော စာထဲမှ ဝယ်သူ၏ Telegram ID (tg://user?id=...) ကို ရှာဖွေခြင်း
-            match = re.search(r'tg://user\?id=(\d+)', update.message.reply_to_message.text or "" if hasattr(update.message.reply_to_message, 'text') else str(update.message.reply_to_message.caption))
-            if not match:
-                # Caption သို့မဟုတ် Text ထဲတွင် ID မတွေ့ပါက ဖြည့်စွက်ရှာဖွေရန် (Fallback)
-                match = re.search(r'id=(\d+)', str(update.message.reply_to_message.parse_entity_urls() if hasattr(update.message.reply_to_message, 'parse_entity_urls') else ""))
+        try:
+            replied_msg = update.message.reply_to_message.text or update.message.reply_to_message.caption or ""
             
-            # အလွယ်ဆုံးနည်းဖြင့် မက်ဆေ့ပ်ထဲပါသော ID ကို ရှာရန် Regex ထပ်မံသုံးခြင်း
-            all_ids = re.findall(r'id=(\d+)', str(update.message.reply_to_message.to_dict()))
-            if all_ids:
-                target_user_id = all_ids[0]
-                try:
-                    await context.bot.send_message(
-                        chat_id=int(target_user_id),
-                        text=f"👑 **Admin မှ တုံ့ပြန်ချက်:**\n\n{user_text}",
-                        parse_mode="Markdown"
-                    )
-                    await update.message.reply_text("✅ ဝယ်သူထံသို့ စာပို့ပြီးပါပြီ။")
-                    return
-                except Exception as e:
-                    await update.message.reply_text(f"❌ ပို့၍မရပါ။ Error: {e}")
-                    return
+            # ချက်တင်စာသားထဲမှ ဝယ်သူ၏ Telegram ID (tg://user?id=...) သို့မဟုတ် id= ကို ရှာဖွေခြင်း
+            match = re.search(r'id=(\d+)', replied_msg)
+            if not match:
+                # Entities များထဲမှ ID ရှာဖွေခြင်း (Fallback)
+                for entity in update.message.reply_to_message.entities or []:
+                    if entity.url and "id=" in entity.url:
+                        match = re.search(r'id=(\d+)', entity.url)
+                        if match:
+                            break
+            
+            if match:
+                target_user_id = match.group(1)
+                # ဝယ်သူဆီသို့ Admin ရေးလိုက်သော စာသားကိုသာ တိုက်ရိုက်ပို့မည် (ပြင်ပလင့်ခ်/ကြော်ငြာများ လုံးဝမပါစေရန်)[span_1](start_span)[span_1](end_span)
+                await context.bot.send_message(
+                    chat_id=int(target_user_id),
+                    text=f"{user_text}"
+                )
+                await update.message.reply_text("✅ ဝယ်သူထံသို့ စာပို့ပြီးပါပြီ။")
+                return
+            else:
+                await update.message.reply_text("❌ ဤမက်ဆေ့ပ်မှ ဝယ်သူ၏ ID ကို ရှာမတွေ့ပါ။ (ဝယ်သူ၏ မက်ဆေ့ပ်ကိုသာ Reply လုပ်ပါ)")
+                return
+        except Exception as e:
+            await update.message.reply_text(f"❌ ပို့၍မရပါ။ Error: {e}")
+            return
 
     # Username ရှိလျှင် @username ပြမည်၊ မရှိလျှင် Admin ဘက်မှ နှိပ်၍ တိုက်ရိုက်ဆက်သွယ်နိုင်ရန် Profile Link ချိတ်ပေးမည်
     if user.username:
@@ -140,7 +145,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup = ReplyKeyboardMarkup(buy_keyboard, resize_keyboard=True)
         await update.message.reply_text(text=choice_text, reply_markup=reply_markup, parse_mode="Markdown")
 
-    # (၃) ဝယ်သူမှ Dia ပမာဏ တစ်ခုခုကို နှိပ်လိုက်လျှင်
+    # (၃) ဝယ်သူမှ Dia ပမာဏ တစ်ခုခုကို နှိပ်လျှင်
     elif "ks)" in user_text:
         invoice_text = (
             f"🛒 **လူကြီးမင်း ရွေးချယ်ထားသော ပမာဏ:**\n"
@@ -240,7 +245,7 @@ def main():
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("Bot is running successfully with Admin Reply & Order Processing System...")
+    print("Bot is running successfully with Clean Admin Reply System...")
     application.run_polling()
 
 if __name__ == "__main__":
