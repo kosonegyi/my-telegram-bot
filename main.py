@@ -22,7 +22,7 @@ def keep_alive():
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 ADMIN_ID = "7303908979"
-TOKEN = "8823110888:AAEZe7k0IAaZUrzF4GNHBJUIah1TpDMqNGM"
+TOKEN = "8823110888:AAHQ0ggckaEXTJsdemtmQYCqOrzF8z8MGCc"
 
 def start(update: Update, context: CallbackContext):
     user = update.effective_user
