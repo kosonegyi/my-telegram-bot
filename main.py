@@ -3,9 +3,8 @@ import logging
 from threading import Thread
 from flask import Flask
 from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Flask server for Keep Alive
 app = Flask('')
 
 @app.route('/')
@@ -22,9 +21,9 @@ def keep_alive():
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 ADMIN_ID = "7303908979"
-TOKEN = "8823110888:AAHQ0ggckaEXTJsdemtmQYCqOrzF8z8MGCc"
+TOKEN = "8823110888:AAHQoggckaEXTJsdemtmQYCq0rzF8z8MGCc"
 
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     keyboard = [
         ["💎 Diamond ဝယ်မည်"],
@@ -37,9 +36,9 @@ def start(update: Update, context: CallbackContext):
         f"မင်္ဂလာပါ {user.first_name} ✨\n\n"
         "မြန်မာနိုင်ငံအတွက် Mobile Legends Diamond များကို စိတ်ချယုံကြည်စွာ ဝယ်ယူနိုင်သော စတိုးဆိုင်မှ ကြိုဆိုပါတယ်။"
     )
-    update.message.reply_text(welcome_text, reply_markup=reply_markup)
+    await update.message.reply_text(welcome_text, reply_markup=reply_markup)
 
-def handle_message(update: Update, context: CallbackContext):
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     user_text = update.message.text
     username_display = f"@{user.username}" if user.username else "@None"
@@ -78,7 +77,7 @@ def handle_message(update: Update, context: CallbackContext):
             ["⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်"]
         ]
         reply_markup = ReplyKeyboardMarkup(buy_keyboard, resize_keyboard=True)
-        update.message.reply_text(price_text, reply_markup=reply_markup, parse_mode="Markdown")
+        await update.message.reply_text(price_text, reply_markup=reply_markup, parse_mode="Markdown")
 
     elif user_text == "📖 ဈေးဝယ်နည်းလမ်း":
         guide_text = (
@@ -90,7 +89,7 @@ def handle_message(update: Update, context: CallbackContext):
         )
         keyboard = [["⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်"]]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        update.message.reply_text(guide_text, reply_markup=reply_markup, parse_mode="Markdown")
+        await update.message.reply_text(guide_text, reply_markup=reply_markup, parse_mode="Markdown")
 
     elif user_text == "📞 ဆက်သွယ်ရန်":
         contact_text = (
@@ -99,7 +98,7 @@ def handle_message(update: Update, context: CallbackContext):
         )
         keyboard = [["⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်"]]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        update.message.reply_text(contact_text, reply_markup=reply_markup, parse_mode="Markdown")
+        await update.message.reply_text(contact_text, reply_markup=reply_markup, parse_mode="Markdown")
 
     elif user_text == "⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်":
         keyboard = [
@@ -108,7 +107,7 @@ def handle_message(update: Update, context: CallbackContext):
             ["📞 ဆက်သွယ်ရန်"]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        update.message.reply_text("🔙 ပင်မစာမျက်နှာသို့ ပြန်ရောက်ပါပြီ။", reply_markup=reply_markup)
+        await update.message.reply_text("🔙 ပင်မစာမျက်နှာသို့ ပြန်ရောက်ပါပြီ။", reply_markup=reply_markup)
 
     elif "ks)" in user_text:
         invoice_text = (
@@ -120,10 +119,10 @@ def handle_message(update: Update, context: CallbackContext):
             "• 09967120289 (Pyae Sone)\n\n"
             "📸 **ငွေလွှဲပြီးပါက ပြေစာ Screenshot ပုံကို ဤ Bot ထဲသို့ တိုက်ရိုက် ပုံရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**"
         )
-        update.message.reply_text(text=invoice_text, parse_mode="Markdown")
+        await update.message.reply_text(text=invoice_text, parse_mode="Markdown")
         try:
             alert_selection = f"🛒 **ဝယ်ယူရန် ပမာဏရွေးချယ်မှု အသစ်**\n━━━━━━━━━━━━━━━━━━━━\n👤 ဝယ်သူ: {user.full_name} ({username_display})\n💎 ရွေးချယ်သွားသည်: {user_text}"
-            context.bot.send_message(chat_id=ADMIN_ID, text=alert_selection, parse_mode="Markdown")
+            await context.bot.send_message(chat_id=ADMIN_ID, text=alert_selection, parse_mode="Markdown")
         except: pass
 
     else:
@@ -134,11 +133,11 @@ def handle_message(update: Update, context: CallbackContext):
                 f"👤 ဝယ်သူ: {user.full_name} ({username_display})\n"
                 f"💬 ပို့လိုက်သောစာ: {user_text}"
             )
-            context.bot.send_message(chat_id=ADMIN_ID, text=forward_text, parse_mode="Markdown")
-            update.message.reply_text("🙏 အချက်အလက်များကို လက်ခံရရှိပါပြီ။ Admin မှ စစ်ဆေးပြီး ဆောင်ရွက်ပေးပါမည်။")
+            await context.bot.send_message(chat_id=ADMIN_ID, text=forward_text, parse_mode="Markdown")
+            await update.message.reply_text("🙏 အချက်အလက်များကို လက်ခံရရှိပါပြီ။ Admin မှ စစ်ဆေးပြီး ဆောင်ရွက်ပေးပါမည်။")
         except: pass
 
-def handle_photo(update: Update, context: CallbackContext):
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     photo_file = update.message.photo[-1].file_id 
     caption_text = update.message.caption if update.message.caption else ""
@@ -152,26 +151,24 @@ def handle_photo(update: Update, context: CallbackContext):
         f"📝 ရေးလာသောစာ: {caption_text}"
     )
     try:
-        context.bot.send_photo(chat_id=ADMIN_ID, photo=photo_file, caption=buyer_info, parse_mode="Markdown")
+        await context.bot.send_photo(chat_id=ADMIN_ID, photo=photo_file, caption=buyer_info, parse_mode="Markdown")
         reply_message = (
             "✅ သင့်ရဲ့ ပြေစာပုံကို လက်ခံရရှိပါပြီ။\n\n"
             "🆔 **လူကြီးမင်း၏ Game ID နှင့် Zone ID ကို ဤနေရာတွင် ဆက်လက်ရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**"
         )
-        update.message.reply_text(reply_message, parse_mode="Markdown")
+        await update.message.reply_text(reply_message, parse_mode="Markdown")
     except Exception as e:
         print(f"Photo Error: {e}")
 
 def main():
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
+    application = Application.builder().token(TOKEN).build()
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.photo, handle_photo))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     keep_alive()
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
