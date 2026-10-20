@@ -19,7 +19,7 @@ def keep_alive():
     t.start()
 
 # Telegram Bot Token and Admin ID
-TOKEN = "8823110888:AAHQoggckaEXTJsdemtmQYCq0rzF8z8MGCc"
+TOKEN = "8823110888:AAE0kS0q5FlCNcc8_favoo5VRDW5uW7Dl9s"
 ADMIN_ID = "7303908979"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
