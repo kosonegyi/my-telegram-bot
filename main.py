@@ -8,7 +8,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 # Logging setup
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# Flask app for Keep Alive (Render)
+# Flask app for Keep Alive (Render Port binding)
 app = Flask('')
 
 @app.route('/')
@@ -16,10 +16,10 @@ def home():
     return "Bot is running successfully 24/7!"
 
 def run_flask():
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# Bot Token အသစ် နှင့် Admin ID
+# Telegram Bot Token အသစ် နှင့် Admin ID
 TOKEN = "8823110888:AAE0kS0qF1CNcc8_favoo5VRDW5uW7D19s"
 ADMIN_ID = "7303908979" 
 
@@ -181,19 +181,19 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"Photo Error: {e}")
 
 def main():
-    # Flask Web Server ကို Background Thread ဖြင့် သီးခြား Run မည်
-    server_thread = Thread(target=run_flask)
-    server_thread.daemon = True
-    server_thread.start()
-    
-    # Telegram Application
+    # Flask Server ကို Background တွင် စတင်ခြင်း
+    flask_thread = Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # Telegram Bot ကို စတင်ခြင်း
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    logging.info("Bot is running continuously...")
+    logging.info("Bot is running successfully...")
     application.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
