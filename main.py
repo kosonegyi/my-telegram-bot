@@ -153,7 +153,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await context.bot.send_photo(chat_id=ADMIN_ID, photo=photo_file, caption=buyer_info, parse_mode="Markdown")
         reply_message = (
-            "✅ သင့်ရဲ့ ပြေစာပုံကို လက်ခံရရှိပါပြီ።\n\n"
+            "✅ သင့်ရဲ့ ပြေစာပုံကို လက်ခံရရှိပါပြီ။\n\n"
             "🆔 **လူကြီးမင်း၏ Game ID နှင့် Zone ID ကို ဤနေရာတွင် ဆက်လက်ရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**"
         )
         await update.message.reply_text(reply_message, parse_mode="Markdown")
