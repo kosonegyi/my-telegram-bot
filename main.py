@@ -1,10 +1,11 @@
 import os
 import logging
-from threading import Thread
 from flask import Flask
+from threading import Thread
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
+# Flask server for Keep Alive
 app = Flask('')
 
 @app.route('/')
@@ -169,6 +170,9 @@ def main():
 
     keep_alive()
     application.run_polling()
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
