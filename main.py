@@ -2,7 +2,7 @@ import os
 import logging
 from flask import Flask
 from threading import Thread
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Logging setup
@@ -15,12 +15,9 @@ app = Flask('')
 def home():
     return "Bot is running successfully 24/7!"
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
 
 # Telegram Bot Config
 TOKEN = "8823110888:AAE0kS0qF1CNcc8_favoo5VRDW5uW7D19s"
@@ -42,7 +39,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(welcome_text, reply_markup=reply_markup)
 
-# ခလုတ်စာသားများနှင့် ဝယ်သူပို့သမျှစာအားလုံးကို ၁၀၀% ကိုင်တွယ်မည့်စနစ်
+# ခလုတ်စာသားများနှင့် ဝယ်သူပို့သမျှစာအားလုံးကို ကိုင်တွယ်မည့်စနစ်
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     user_text = update.message.text
@@ -122,77 +119,4 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except: pass
 
     # (၄) ပင်မစာမျက်နှာသို့ ပြန်ရန် နှိပ်လျှင်
-    elif user_text == "⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်":
-        keyboard = [
-            ["🛍️ ဝယ်ယူမည် (Products)"],
-            ["💎 Dia စျေးနှုန်းများကြည့်ရန်"],
-            ["👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်"]
-        ]
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text("🔙 ပင်မစာမျက်နှာသို့ ပြန်ရောက်ပါပြီ။", reply_markup=reply_markup)
-
-    # (၅) Admin တိုက်ရိုက်ဆက်သွယ်ရန် ခလုတ်နှိပ်လျှင်
-    elif user_text == "👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်":
-        admin_text = (
-            "👨‍💻 **Admin ဆက်သွယ်ရန်**\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "အောက်ပါ သင့်အကောင့် Link ပြာလေးကို နှိပ်ပြီး တိုက်ရိုက် လာရောက် ဆက်သွယ်နိုင်ပါပြီရှင် -\n\n"
-            "👉 ချက်တင်ဘောက်စ်သို့ သွားရန် - @ksonegyi333"
-        )
-        await update.message.reply_text(admin_text)
-
-    # (၆) ဝယ်သူက Game ID သို့မဟုတ် အခြားစာများ လာရိုက်ပို့လျှင်
-    else:
-        try:
-            forward_text = (
-                "🆔 ဝယ်သူထံမှ အချက်အလက်/စာ ရောက်ရှိလာပါသည်\n"
-                "━━━━━━━━━━━━━━━━━━━━\n"
-                f"👤 ဝယ်သူ: {user.full_name} ({username_display})\n"
-                f"💬 ပို့လိုက်သောစာ: {user_text}"
-            )
-            await context.bot.send_message(chat_id=ADMIN_ID, text=forward_text)
-            await update.message.reply_text("🙏 အချက်အလက်များကို မှတ်တမ်းတင်ပြီးပါပြီ။ ခေတ္တစောင့်ဆိုင်းပေးပါရန်။")
-        except: pass
-
-# ဝယ်သူဘက်က ပြေစာပုံ ပို့လာပါက Admin ထံ လှမ်းပို့မည့် စနစ်
-async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.from_user
-    photo_file = update.message.photo[-1].file_id 
-    caption_text = update.message.caption if update.message.caption else ""
-    username_display = f"@{user.username}" if user.username else "@None"
-
-    buyer_info = (
-        "📩 **ဝယ်သူထံမှ ပြေစာအသစ် ရောက်ရှိလာပါသည်** 📩\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 **အမည်:** {user.full_name}\n"
-        f"🆔 Username: {username_display}\n"
-        f"📝 ရေးလာသောစာ: {caption_text}"
-    )
-    try:
-        await context.bot.send_photo(chat_id=ADMIN_ID, photo=photo_file, caption=buyer_info)
-        
-        reply_message = (
-            "✅ သင့်ရဲ့ ပြေစာပုံကို လက်ခံရရှိပါပြီ။ Admin မှ စစ်ဆေးပြီး ထည့်သွင်းပေးပါမည်။\n\n"
-            "🆔 **လူကြီးမင်း၏ Game ID နှင့် Zone ID ကို ဤနေရာတွင် ရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**\n"
-            "💡 _(ဥပမာ - 12345678 (1234))_"
-        )
-        await update.message.reply_text(reply_message, parse_mode="Markdown")
-    except Exception as e:
-        logging.error(f"Photo Error: {e}")
-
-def main():
-    # Flask Keep Alive စတင်ခြင်း
-    keep_alive()
-    
-    # Application တည်ဆောက်ခြင်း
-    application = Application.builder().token(TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    logging.info("Bot is running successfully with Keep Alive...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
-
-if __name__ == "__main__":
-    main()
+    elif user_text == "⬅️ ပင်မစာမျက်နှာသို့ ပြ
