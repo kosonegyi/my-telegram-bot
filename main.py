@@ -1,43 +1,13 @@
 import os
-import asyncio
 import logging
-from threading import Thread
-from flask import Flask
 from telethon import TelegramClient, events
-from telethon.tl.types import UserStatusOnline, UserStatusOffline
 from telethon.tl.functions.contacts import ResolveUsernameRequest
 from telethon.tl.functions.stories import GetPeerStoriesRequest
 
-# -------------------------------------------------------------
-# Render Free Web Service အတွက် Flask Keep-Alive Web Server
-# -------------------------------------------------------------
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Bot is running 24/7 successfully!"
-
-def run_flask():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
-
-def keep_alive():
-    t = Thread(target=run_flask)
-    t.daemon = True
-    t.start()
-
-# -------------------------------------------------------------
-# Telegram Userbot Configurations
-# -------------------------------------------------------------
 API_ID = 34368306
 API_HASH = '647e6ff145a16cb6b0fb12777e512e63'
 
-# Working Directory ထဲတွင် Session ဖိုင်ကို သိမ်းရန်
-session_path = os.path.join(os.getcwd(), 'my_story_user_session')
-client = TelegramClient(session_path, API_ID, API_HASH)
-
-# စောင့်ကြည့်လိုသူများ၏ Username များ
-MONITOR_USERNAMES = ['Kothu7877', 'ksonegyi333', 'William_Nge'] 
+client = TelegramClient('my_story_user_session', API_ID, API_HASH)
 
 os.makedirs('./downloaded_story', exist_ok=True)
 os.makedirs('./downloaded_posts/videos', exist_ok=True)
@@ -47,31 +17,11 @@ os.makedirs('./downloaded_posts/photos', exist_ok=True)
 async def start(event):
     await event.respond(
         "မင်္ဂလာပါ!\n"
-        "- Story ကို Stealth ဖြင့် ကြည့်ရန်: `/story @username`\n"
-        "- ပို့စ်လင့်ခ်ဖြင့် ဒေါင်းလုပ်ဆွဲရန်: Link ကို တိုက်ရိုက်ပို့ပါ။\n"
-        "- Online Monitor စနစ် (Kothu7877, ksonegyi333, William_Nge) အလုပ်လုပ်နေပါပြီ။"
+        "- Story များကို Stealth Mode (သူများမသိအောင်) ကြည့်ရန်: `/story @username` ဟု ပို့ပါ။\n"
+        "- ပို့စ်လင့်ခ်ဖြင့် ဒေါင်းလုပ်ဆွဲရန်: Link ကို တိုက်ရိုက်ပို့ပါ။"
     )
 
-@client.on(events.UserUpdate)
-async def online_monitor(event):
-    try:
-        target_user = None
-        for uname in MONITOR_USERNAMES:
-            clean_uname = uname.lstrip('@')
-            user_entity = await client.get_entity(clean_uname)
-            if event.user_id == user_entity.id:
-                target_user = clean_uname
-                break
-        
-        if target_user:
-            if isinstance(event.status, UserStatusOnline):
-                await client.send_message(
-                    'me', 
-                    f"⚠️ **Online Alert!**\n@{target_user} ယခု အွန်လိုင်းပေါ်သို့ ရောက်ရှိလာပါပြီ။"
-                )
-    except Exception as e:
-        pass
-
+# Story ကို Stealth Mode (အမည်မဖော်ဘဲ/View မတက်ဘဲ) ဖြင့် ကြည့်ရှုဒေါင်းလုပ်ဆွဲမည့် Command
 @client.on(events.NewMessage(pattern=r'/story\s+(@\w+)'))
 async def download_story_stealth(event):
     username = event.pattern_match.group(1).lstrip('@')
@@ -81,6 +31,7 @@ async def download_story_stealth(event):
         result = await client(ResolveUsernameRequest(username=username))
         user = result.users[0]
         
+        # Story များကို ဆွဲထုတ်ခြင်း (Read API ကို ခေါ်ဆိုခြင်း မရှိပါ)
         stories = await client(GetPeerStoriesRequest(peer=user))
         
         if not stories.stories.stories:
@@ -102,11 +53,12 @@ async def download_story_stealth(event):
         if count == 0:
             await event.respond("ဒေါင်းလုပ်ဆွဲ၍ရသော Story မီဒီယာ မတွေ့ပါ။")
         else:
-            await event.respond(f"အောင်မြင်ပါပြီ! Story {count} ခုကို တစ်ဖက်လူ မသိစေဘဲ ဒေါင်းလုပ်ဆွဲပြီးပါပြီ။")
+            await event.respond(f"အောင်မြင်ပါပြီ! Story {count} ခုကို တစ်ဖက်လူ မသိစေဘဲ (Stealth ဖြင့်) ဒေါင်းလုပ်ဆွဲပြီးပါပြီ။")
             
     except Exception as e:
         await event.respond(f"အမှားအယွင်း ဖြစ်ပေါ်သည်: {e}")
 
+# လင့်ခ်ဖြင့် ပို့စ်များ/ဗီဒီယိုများ ဒေါင်းလုပ်ဆွဲမည့် Command
 @client.on(events.NewMessage(pattern=r'(https?://t\.me/[^\s]+)'))
 async def download_by_link(event):
     link = event.pattern_match.group(1)
@@ -148,19 +100,6 @@ async def download_by_link(event):
     except Exception as e:
         await event.respond(f"အမှားအယွင်း ဖြစ်ပေါ်သည်: {e}")
 
-async def run_bot():
-    while True:
-        try:
-            print("Telegram Userbot (Stealth, Downloader & Online Monitor) စတင်နေပါပြီ...")
-            await client.start()
-            await client.run_until_disconnected()
-        except Exception as e:
-            print(f"Error သို့မဟုတ် Connection ကျသွားပါသည်: {e}")
-            print("5 စက္ကန့်အကြာတွင် အလိုအလျောက် ပြန်လည်ချိတ်ဆက်ပါမည်...")
-            await asyncio.sleep(5)
-
-if __name__ == '__main__':
-    # Flask Web Server အရင်အလုပ်လုပ်မည် (Render Port အတွက်)
-    keep_alive()
-    # Telethon Userbot စတင်မည်
-    client.loop.run_until_complete(run_bot())
+print("Telegram Stealth Story & Link Downloader Bot စတင်နေပါပြီ...")
+client.start()
+client.run_until_disconnected()
