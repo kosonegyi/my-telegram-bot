@@ -32,13 +32,13 @@ def keep_alive():
 API_ID = 34368306
 API_HASH = '647e6ff145a16cb6b0fb12777e512e63'
 
+# Working Directory ထဲတွင် Session ဖိုင်ကို သိမ်းရန်
 session_path = os.path.join(os.getcwd(), 'my_story_user_session')
 client = TelegramClient(session_path, API_ID, API_HASH)
 
-# Online စောင့်ကြည့်ချင်သော Targets စာရင်း
+# စောင့်ကြည့်လိုသူများ၏ Username များ
 MONITOR_USERNAMES = ['Kothu7877', 'ksonegyi333', 'William_Nge'] 
 
-# Folder များ အလိုအလျောက် ဆောက်ခြင်း
 os.makedirs('./downloaded_story', exist_ok=True)
 os.makedirs('./downloaded_posts/videos', exist_ok=True)
 os.makedirs('./downloaded_posts/photos', exist_ok=True)
@@ -155,11 +155,12 @@ async def run_bot():
             await client.start()
             await client.run_until_disconnected()
         except Exception as e:
-            print(f"Error ဖြစ်ပေါ်ပါသည်: {e}")
+            print(f"Error သို့မဟုတ် Connection ကျသွားပါသည်: {e}")
+            print("5 စက္ကန့်အကြာတွင် အလိုအလျောက် ပြန်လည်ချိတ်ဆက်ပါမည်...")
             await asyncio.sleep(5)
 
 if __name__ == '__main__':
-    # Flask Web Server အရင်နိုးမည် (Render Port စောင့်ဆိုင်းမှုအတွက်)
+    # Flask Web Server အရင်အလုပ်လုပ်မည် (Render Port အတွက်)
     keep_alive()
-    # Telethon Bot စတင်အလုပ်လုပ်မည်
+    # Telethon Userbot စတင်မည်
     client.loop.run_until_complete(run_bot())
