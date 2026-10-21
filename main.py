@@ -1,200 +1,165 @@
 import os
+import asyncio
 import logging
-from flask import Flask
 from threading import Thread
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from flask import Flask
+from telethon import TelegramClient, events
+from telethon.tl.types import UserStatusOnline, UserStatusOffline
+from telethon.tl.functions.contacts import ResolveUsernameRequest
+from telethon.tl.functions.stories import GetPeerStoriesRequest
 
-# Logging setup
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-# Flask app for Keep Alive (Render Port binding)
+# -------------------------------------------------------------
+# Render Free Web Service အတွက် Flask Keep-Alive Web Server
+# -------------------------------------------------------------
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is running successfully 24/7!"
+    return "Bot is running 24/7 successfully!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# Telegram Bot Token အသစ် နှင့် Admin ID
-TOKEN = "8823110888:AAE0kS0qF1CNcc8_favoo5VRDW5uW7D19s"
-ADMIN_ID = "7303908979" 
+def keep_alive():
+    t = Thread(target=run_flask)
+    t.daemon = True
+    t.start()
 
-# /start command ပို့တဲ့အခါ အောက်ခြေခလုတ်များ တိုက်ရိုက်ပြသခြင်း
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        ["🛍️ ဝယ်ယူမည် (Products)"],
-        ["💎 Dia စျေးနှုန်းများကြည့်ရန်"],
-        ["👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    
-    welcome_text = (
-        "👋 မင်္ဂလာပါ V VV 🙏\n\n"
-        "💳 သင့်အတွက် အကောင်းဆုံးနှင့် အမြန်ဆန်ဆုံး ဝန်ဆောင်မှုများ ပေးရန် အသင့်ရှိနေပါသည်။\n\n"
-        "👇 အောက်ပါ ခလုတ်များကို နှိပ်၍ ဝန်ဆောင်မှုများကို ကြည့်ရှုနိုင်ပါသည်။"
+# -------------------------------------------------------------
+# Telegram Userbot Configurations
+# -------------------------------------------------------------
+API_ID = 34368306
+API_HASH = '647e6ff145a16cb6b0fb12777e512e63'
+
+session_path = os.path.join(os.getcwd(), 'my_story_user_session')
+client = TelegramClient(session_path, API_ID, API_HASH)
+
+# Online စောင့်ကြည့်ချင်သော Targets စာရင်း
+MONITOR_USERNAMES = ['Kothu7877', 'ksonegyi333', 'William_Nge'] 
+
+# Folder များ အလိုအလျောက် ဆောက်ခြင်း
+os.makedirs('./downloaded_story', exist_ok=True)
+os.makedirs('./downloaded_posts/videos', exist_ok=True)
+os.makedirs('./downloaded_posts/photos', exist_ok=True)
+
+@client.on(events.NewMessage(pattern='/start'))
+async def start(event):
+    await event.respond(
+        "မင်္ဂလာပါ!\n"
+        "- Story ကို Stealth ဖြင့် ကြည့်ရန်: `/story @username`\n"
+        "- ပို့စ်လင့်ခ်ဖြင့် ဒေါင်းလုပ်ဆွဲရန်: Link ကို တိုက်ရိုက်ပို့ပါ။\n"
+        "- Online Monitor စနစ် (Kothu7877, ksonegyi333, William_Nge) အလုပ်လုပ်နေပါပြီ။"
     )
-    await update.message.reply_text(welcome_text, reply_markup=reply_markup)
 
-# ခလုတ်စာသားများနှင့် ဝယ်သူပို့သမျှစာအားလုံးကို ကိုင်တွယ်မည့်စနစ်
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.from_user
-    user_text = update.message.text
-    username_display = f"@{user.username}" if user.username else "@None"
-
-    # (၁) Dia စျေးနှုန်းများကြည့်ရန် ခလုတ်နှိပ်လျှင်
-    if user_text == "💎 Dia စျေးနှုန်းများကြည့်ရန်":
-        price_text = (
-            "🔮 Weekly Pass - 9,000 ks\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "💎 Dia 86     -  6,000ks\n"
-            "💎 Dia 172   -  12,000ks\n"
-            "💎 Dia 257   -  18,000ks\n"
-            "💎 Dia 344   -  24,000ks\n"
-            "💎 Dia 516   -  36,000ks\n"
-            "💎 Dia 706   -  48,000ks\n"
-            "💎 Dia 1346  -  90,000ks\n"
-            "💎 Dia 1825  -  120,000ks\n"
-            "💎 Dia 2195  -  144,000ks\n"
-            "💎 Dia 3688  -  240,000ks\n"
-            "💎 Dia 5532  -  360,000ks\n"
-            "💎 Dia 9288  -  590,000ks\n\n"
-            "🔥 Double Diamond Price 💎\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "💎 50 + 50     =  5,000ks\n"
-            "💎 150 + 150   =  13,000ks\n"
-            "💎 250 + 250   =  19,500ks\n"
-            "💎 500 + 500   =  39,500ks\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "💰 Payment: KBZ Pay / Wave Pay\n"
-            "📞 09967120289 Pyae Sone\n\n"
-            "📸 _ငွေလွှဲပြီးပါက ပြေစာ Screenshot ပုံကို ဤ Bot ထဲသို့ တိုက်ရိုက် ပုံရိုက်ပို့ပေးနိုင်ပါသည်_"
-        )
-        buy_keyboard = [["🛍️ ဝယ်ယူမည့် ပမာဏ ရွေးချယ်ရန်"], ["⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်"]]
-        reply_markup = ReplyKeyboardMarkup(buy_keyboard, resize_keyboard=True)
-        await update.message.reply_text(price_text, reply_markup=reply_markup)
-        
-        try:
-            await context.bot.send_message(chat_id=ADMIN_ID, text=f"💎 Dia စျေးနှုန်းများကြည့်သူ: {user.full_name} ({username_display})")
-        except Exception:
-            pass
-
-    # (၂) ဝယ်ယူမည် (Products) ခလုတ်နှိပ်လျှင်
-    elif user_text in ["🛍️ ဝယ်ယူမည် (Products)", "🛍️ ဝယ်ယူမည့် ပမာဏ ရွေးချယ်ရန်"]:
-        choice_text = "👇 **လူကြီးမင်း ဝယ်ယူလိုသော Dia ပမာဏကို ရွေးချယ်ပေးပါရှင် -**"
-        
-        buy_keyboard = [
-            ["🔮 Weekly Pass (9,000 ks)"],
-            ["💎 86 Dia (6,000 ks)", "💎 172 Dia (12,000 ks)"],
-            ["💎 257 Dia (18,000 ks)", "💎 344 Dia (24,000 ks)"],
-            ["💎 516 Dia (36,000 ks)", "💎 706 Dia (48,000 ks)"],
-            ["💎 1346 Dia (90,000 ks)", "💎 1825 Dia (120,000 ks)"],
-            ["💎 2195 Dia (144,000 ks)", "💎 3688 Dia (240,000 ks)"],
-            ["💎 5532 Dia (36,000 ks)", "💎 9288 Dia (590,000 ks)"],
-            ["🔥 Double 50+50 (5,000 ks)", "🔥 Double 150+150 (13,000 ks)"],
-            ["🔥 Double 250+250 (19,500 ks)", "🔥 Double 500+500 (39,500 ks)"],
-            ["⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်"]
-        ]
-        reply_markup = ReplyKeyboardMarkup(buy_keyboard, resize_keyboard=True)
-        await update.message.reply_text(text=choice_text, reply_markup=reply_markup, parse_mode="Markdown")
-
-    # (၃) ဝယ်သူမှ Dia ပမာဏ တစ်ခုခုကို နှိပ်လိုက်လျှင်
-    elif "ks)" in user_text:
-        invoice_text = (
-            f"🛒 **လူကြီးမင်း ရွေးချယ်ထားသော ပမာဏ:**\n"
-            f"➔ ✨ **{user_text}**\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "💰 **Payment ဆောင်ရွက်ရန် အချက်အလက်:**\n"
-            "• KBZ Pay သို့မဟုတ် Wave Pay\n"
-            "• 09967120289 (Pyae Sone)\n\n"
-            "📸 **ငွေလွှဲပြီးပါက ပြေစာ Screenshot ပုံကို ဤ Bot ထဲသို့ တိုက်ရိုက် ပုံရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**"
-        )
-        await update.message.reply_text(text=invoice_text, parse_mode="Markdown")
-
-        try:
-            alert_selection = f"🛒 **ဝယ်ယူရန် ပမာဏရွေးချယ်မှု အသစ်**\n━━━━━━━━━━━━━━━━━━━━\n👤 ဝယ်သူ: {user.full_name} ({username_display})\n💎 ရွေးချယ်သွားသည်: {user_text}"
-            await context.bot.send_message(chat_id=ADMIN_ID, text=alert_selection)
-        except Exception:
-            pass
-
-    # (၄) ပင်မစာမျက်နှာသို့ ပြန်ရန် နှိပ်လျှင်
-    elif user_text == "⬅️ ပင်မစာမျက်နှာသို့ ပြန်ရန်":
-        keyboard = [
-            ["🛍️ ဝယ်ယူမည် (Products)"],
-            ["💎 Dia စျေးနှုန်းများကြည့်ရန်"],
-            ["👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်"]
-        ]
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        await update.message.reply_text("🔙 ပင်မစာမျက်နှာသို့ ပြန်ရောက်ပါပြီ။", reply_markup=reply_markup)
-
-    # (၅) Admin တိုက်ရိုက်ဆက်သွယ်ရန် ခလုတ်နှိပ်လျှင်
-    elif user_text == "👨‍💻 Admin တိုက်ရိုက်ဆက်သွယ်ရန်":
-        admin_text = (
-            "👨‍💻 **Admin ဆက်သွယ်ရန်**\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "အောက်ပါ သင့်အကောင့် Link ပြာလေးကို နှိပ်ပြီး တိုက်ရိုက် လာရောက် ဆက်သွယ်နိုင်ပါပြီရှင် -\n\n"
-            "👉 ချက်တင်ဘောက်စ်သို့ သွားရန် - @ksonegyi333"
-        )
-        await update.message.reply_text(admin_text)
-
-    # (၆) ဝယ်သူက Game ID သို့မဟုတ် အခြားစာများ လာရိုက်ပို့လျှင်
-    else:
-        try:
-            forward_text = (
-                "🆔 ဝယ်သူထံမှ အချက်အလက်/စာ ရောက်ရှိလာပါသည်\n"
-                "━━━━━━━━━━━━━━━━━━━━\n"
-                f"👤 ဝယ်သူ: {user.full_name} ({username_display})\n"
-                f"💬 ပို့လိုက်သောစာ: {user_text}"
-            )
-            await context.bot.send_message(chat_id=ADMIN_ID, text=forward_text)
-            await update.message.reply_text("🙏 အချက်အလက်များကို မှတ်တမ်းတင်ပြီးပါပြီ။ ခေတ္တစောင့်ဆိုင်းပေးပါရန်။")
-        except Exception:
-            pass
-
-# ဝယ်သူဘက်က ပြေစာပုံ ပို့လာပါက Admin ထံ လှမ်းပို့မည့် စနစ်
-async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.from_user
-    photo_file = update.message.photo[-1].file_id 
-    caption_text = update.message.caption if update.message.caption else ""
-    username_display = f"@{user.username}" if user.username else "@None"
-
-    buyer_info = (
-        "📩 **ဝယ်သူထံမှ ပြေစာအသစ် ရောက်ရှိလာပါသည်** 📩\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 **အမည်:** {user.full_name}\n"
-        f"🆔 Username: {username_display}\n"
-        f"📝 ရေးလာသောစာ: {caption_text}"
-    )
+@client.on(events.UserUpdate)
+async def online_monitor(event):
     try:
-        await context.bot.send_photo(chat_id=ADMIN_ID, photo=photo_file, caption=buyer_info)
+        target_user = None
+        for uname in MONITOR_USERNAMES:
+            clean_uname = uname.lstrip('@')
+            user_entity = await client.get_entity(clean_uname)
+            if event.user_id == user_entity.id:
+                target_user = clean_uname
+                break
         
-        reply_message = (
-            "✅ သင့်ရဲ့ ပြေစာပုံကို လက်ခံရရှိပါပြီ။ Admin မှ စစ်ဆေးပြီး ထည့်သွင်းပေးပါမည်။\n\n"
-            "🆔 **လူကြီးမင်း၏ Game ID နှင့် Zone ID ကို ဤနေရာတွင် ရိုက်ပို့ပေးပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။**\n"
-            "💡 _(ဥပမာ - 12345678 (1234))_"
-        )
-        await update.message.reply_text(reply_message, parse_mode="Markdown")
+        if target_user:
+            if isinstance(event.status, UserStatusOnline):
+                await client.send_message(
+                    'me', 
+                    f"⚠️ **Online Alert!**\n@{target_user} ယခု အွန်လိုင်းပေါ်သို့ ရောက်ရှိလာပါပြီ။"
+                )
     except Exception as e:
-        logging.error(f"Photo Error: {e}")
+        pass
 
-def main():
-    # Flask Server ကို Background တွင် စတင်ခြင်း
-    flask_thread = Thread(target=run_flask)
-    flask_thread.daemon = True
-    flask_thread.start()
+@client.on(events.NewMessage(pattern=r'/story\s+(@\w+)'))
+async def download_story_stealth(event):
+    username = event.pattern_match.group(1).lstrip('@')
+    await event.respond(f"@{username} ရဲ့ Story များကို Stealth Mode ဖြင့် ရှာဖွေနေပါပြီ...")
+    
+    try:
+        result = await client(ResolveUsernameRequest(username=username))
+        user = result.users[0]
+        
+        stories = await client(GetPeerStoriesRequest(peer=user))
+        
+        if not stories.stories.stories:
+            await event.respond(f"ယခုလက်ရှိ @{username} တွင် ကြည့်ရှုနိုင်သော Story မရှိပါ။")
+            return
+            
+        count = 0
+        for story in stories.stories.stories:
+            if story.media:
+                path = await client.download_media(story.media, file='./downloaded_story/')
+                if path:
+                    count += 1
+                    await client.send_file(
+                        event.chat_id, 
+                        path, 
+                        caption=f"Stealth Story from @{username}"
+                    )
+                    
+        if count == 0:
+            await event.respond("ဒေါင်းလုပ်ဆွဲ၍ရသော Story မီဒီယာ မတွေ့ပါ။")
+        else:
+            await event.respond(f"အောင်မြင်ပါပြီ! Story {count} ခုကို တစ်ဖက်လူ မသိစေဘဲ ဒေါင်းလုပ်ဆွဲပြီးပါပြီ။")
+            
+    except Exception as e:
+        await event.respond(f"အမှားအယွင်း ဖြစ်ပေါ်သည်: {e}")
 
-    # Telegram Bot ကို စတင်ခြင်း
-    application = Application.builder().token(TOKEN).build()
+@client.on(events.NewMessage(pattern=r'(https?://t\.me/[^\s]+)'))
+async def download_by_link(event):
+    link = event.pattern_match.group(1)
+    await event.respond("ပေးပို့ထားသော လင့်ခ်မှ မီဒီယာများကို ရှာဖွေနေပါပြီ...")
+    
+    try:
+        parts = link.split('/')
+        msg_id = int(parts[-1])
+        
+        if 'c' in parts:
+            chat_id = int('-100' + parts[-2])
+            target = await client.get_entity(chat_id)
+        else:
+            username = parts[-2]
+            target = await client.get_entity(username)
+            
+        message = await client.get_messages(target, ids=msg_id)
+        
+        if message and message.media:
+            is_video = message.video or (message.document and message.document.mime_type.startswith('video'))
+            target_folder = './downloaded_posts/videos/' if is_video else './downloaded_posts/photos/'
+            
+            path = await client.download_media(message, file=target_folder)
+            if path:
+                if message.text:
+                    txt_path = f"{path}.txt"
+                    with open(txt_path, 'w', encoding='utf-8') as f:
+                        f.write(message.text)
+                
+                await client.send_file(
+                    event.chat_id, 
+                    path, 
+                    caption=message.text or "Downloaded Media Post"
+                )
+                await event.respond("အောင်မြင်ပါပြီ! ဖိုင်ကို သက်ဆိုင်ရာ Folder ထဲသို့ သိမ်းဆည်းပေးပြီးပါပြီ။")
+        else:
+            await event.respond("အဆိုပါလင့်ခ်တွင် ဒေါင်းလုပ်လုပ်နိုင်သော မီဒီယာ မရှိပါ။")
+            
+    except Exception as e:
+        await event.respond(f"အမှားအယွင်း ဖြစ်ပေါ်သည်: {e}")
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+async def run_bot():
+    while True:
+        try:
+            print("Telegram Userbot (Stealth, Downloader & Online Monitor) စတင်နေပါပြီ...")
+            await client.start()
+            await client.run_until_disconnected()
+        except Exception as e:
+            print(f"Error ဖြစ်ပေါ်ပါသည်: {e}")
+            await asyncio.sleep(5)
 
-    logging.info("Bot is running successfully...")
-    application.run_polling(drop_pending_updates=True)
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    # Flask Web Server အရင်နိုးမည် (Render Port စောင့်ဆိုင်းမှုအတွက်)
+    keep_alive()
+    # Telethon Bot စတင်အလုပ်လုပ်မည်
+    client.loop.run_until_complete(run_bot())
