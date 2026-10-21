@@ -1,13 +1,20 @@
 import os
+import asyncio
 import logging
 from telethon import TelegramClient, events
+from telethon.tl.types import UserStatusOnline, UserStatusOffline
 from telethon.tl.functions.contacts import ResolveUsernameRequest
 from telethon.tl.functions.stories import GetPeerStoriesRequest
 
 API_ID = 34368306
 API_HASH = '647e6ff145a16cb6b0fb12777e512e63'
 
-client = TelegramClient('my_story_user_session', API_ID, API_HASH)
+# Permission Error မတက်စေရန် Working Directory ထဲတွင် Session ဖိုင်ကို တိုက်ရိုက်သိမ်းရန် သတ်မှတ်ခြင်း
+session_path = os.path.join(os.getcwd(), 'my_story_user_session')
+client = TelegramClient(session_path, API_ID, API_HASH)
+
+# စောင့်ကြည့်လိုသူများ၏ Username များ
+MONITOR_USERNAMES = ['Kothu7877', 'ksonegyi333', 'William_Nge'] 
 
 os.makedirs('./downloaded_story', exist_ok=True)
 os.makedirs('./downloaded_posts/videos', exist_ok=True)
@@ -17,11 +24,36 @@ os.makedirs('./downloaded_posts/photos', exist_ok=True)
 async def start(event):
     await event.respond(
         "မင်္ဂလာပါ!\n"
-        "- Story များကို Stealth Mode (သူများမသိအောင်) ကြည့်ရန်: `/story @username` ဟု ပို့ပါ။\n"
-        "- ပို့စ်လင့်ခ်ဖြင့် ဒေါင်းလုပ်ဆွဲရန်: Link ကို တိုက်ရိုက်ပို့ပါ။"
+        "- Story ကို Stealth ဖြင့် ကြည့်ရန်: `/story @username`\n"
+        "- ပို့စ်လင့်ခ်ဖြင့် ဒေါင်းလုပ်ဆွဲရန်: Link ကို တိုက်ရိုက်ပို့ပါ။\n"
+        "- Online Monitor စနစ် (Kothu7877, ksonegyi333, William_Nge) အလုပ်လုပ်နေပါပြီ။"
     )
 
-# Story ကို Stealth Mode (အမည်မဖော်ဘဲ/View မတက်ဘဲ) ဖြင့် ကြည့်ရှုဒေါင်းလုပ်ဆွဲမည့် Command
+# -------------------------------------------------------------
+# သူငယ်ချင်း Online ဝင်လာမှုကို စောင့်ကြည့်မည့် Event Handler
+# -------------------------------------------------------------
+@client.on(events.UserUpdate)
+async def online_monitor(event):
+    try:
+        target_user = None
+        for uname in MONITOR_USERNAMES:
+            clean_uname = uname.lstrip('@')
+            user_entity = await client.get_entity(clean_uname)
+            if event.user_id == user_entity.id:
+                target_user = clean_uname
+                break
+        
+        if target_user:
+            # User Status Online ဖြစ်သွားပါက
+            if isinstance(event.status, UserStatusOnline):
+                await client.send_message(
+                    'me', 
+                    f"⚠️ **Online Alert!**\n@{target_user} ယခု အွန်လိုင်းပေါ်သို့ ရောက်ရှိလာပါပြီ။"
+                )
+    except Exception as e:
+        pass
+
+# Story ကို Stealth Mode ဖြင့် ကြည့်ရှုဒေါင်းလုပ်ဆွဲမည့် Command
 @client.on(events.NewMessage(pattern=r'/story\s+(@\w+)'))
 async def download_story_stealth(event):
     username = event.pattern_match.group(1).lstrip('@')
@@ -31,7 +63,6 @@ async def download_story_stealth(event):
         result = await client(ResolveUsernameRequest(username=username))
         user = result.users[0]
         
-        # Story များကို ဆွဲထုတ်ခြင်း (Read API ကို ခေါ်ဆိုခြင်း မရှိပါ)
         stories = await client(GetPeerStoriesRequest(peer=user))
         
         if not stories.stories.stories:
@@ -53,7 +84,7 @@ async def download_story_stealth(event):
         if count == 0:
             await event.respond("ဒေါင်းလုပ်ဆွဲ၍ရသော Story မီဒီယာ မတွေ့ပါ။")
         else:
-            await event.respond(f"အောင်မြင်ပါပြီ! Story {count} ခုကို တစ်ဖက်လူ မသိစေဘဲ (Stealth ဖြင့်) ဒေါင်းလုပ်ဆွဲပြီးပါပြီ။")
+            await event.respond(f"အောင်မြင်ပါပြီ! Story {count} ခုကို တစ်ဖက်လူ မသိစေဘဲ ဒေါင်းလုပ်ဆွဲပြီးပါပြီ။")
             
     except Exception as e:
         await event.respond(f"အမှားအယွင်း ဖြစ်ပေါ်သည်: {e}")
@@ -100,6 +131,17 @@ async def download_by_link(event):
     except Exception as e:
         await event.respond(f"အမှားအယွင်း ဖြစ်ပေါ်သည်: {e}")
 
-print("Telegram Stealth Story & Link Downloader Bot စတင်နေပါပြီ...")
-client.start()
-client.run_until_disconnected()
+# ၂၄ နာရီ မပြုတ်ကျဘဲ အလိုအလျောက် ပြန်ချိတ်ဆက်ပေးမည့် Loop စနစ်
+async def run_bot():
+    while True:
+        try:
+            print("Telegram Bot (Stealth, Downloader & Online Monitor) စတင်နေပါပြီ...")
+            await client.start()
+            await client.run_until_disconnected()
+        except Exception as e:
+            print(f"Error သို့မဟုတ် Connection ကျသွားပါသည်: {e}")
+            print("5 စက္ကန့်အကြာတွင် အလိုအလျောက် ပြန်လည်ချိတ်ဆက်ပါမည်...")
+            await asyncio.sleep(5)
+
+if __name__ == '__main__':
+    client.loop.run_until_complete(run_bot())
